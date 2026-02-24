@@ -8,15 +8,25 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// Validator validates transaction data
+// Validator validates transaction data to ensure it meets business rules and data integrity requirements.
+// It performs comprehensive validation including:
+//   - Currency codes are supported
+//   - Amounts are positive
+//   - Transaction types are valid
+//   - Timestamps are not in the future
+//   - Required IDs are present
+//
+// Validation errors include context about which field failed and why.
 type Validator struct{}
 
-// NewValidator creates a new transaction validator
+// NewValidator creates a new transaction validator.
 func NewValidator() *Validator {
 	return &Validator{}
 }
 
-// Validate validates a transaction
+// Validate performs comprehensive validation on a transaction.
+// Returns an error describing the first validation failure encountered,
+// or nil if the transaction is valid.
 func (v *Validator) Validate(tx *domain.Transaction) error {
 	if err := v.validateCurrency(tx.Currency); err != nil {
 		return err

@@ -11,12 +11,25 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// CSVReader reads and parses transactions from CSV files
+// CSVReader reads and parses transaction data from CSV files into domain.Transaction entities.
+// It validates the CSV structure, including header columns and data types, and provides
+// detailed error messages with line numbers for debugging.
+//
+// The expected CSV format includes the following columns:
+//   - transaction_id: Unique identifier for the transaction
+//   - supplier_id: Identifier for the supplier/merchant
+//   - type: Transaction type (authorization, capture, or refund)
+//   - original_amount: Amount in local currency (decimal format)
+//   - currency: Currency code (ARS, BRL, COP, or MXN)
+//   - timestamp: Transaction timestamp (RFC3339 format)
+//   - status: Transaction status (completed, pending, or failed)
 type CSVReader struct {
 	expectedHeaders []string
 }
 
-// NewCSVReader creates a new CSV reader with expected header validation
+// NewCSVReader creates a new CSV reader with expected header validation.
+// The reader will validate that all CSV files contain the required columns
+// in the correct order.
 func NewCSVReader() *CSVReader {
 	return &CSVReader{
 		expectedHeaders: []string{
@@ -31,7 +44,11 @@ func NewCSVReader() *CSVReader {
 	}
 }
 
-// ReadFile reads transactions from a CSV file
+// ReadFile reads and parses all transactions from a CSV file at the specified path.
+// Returns a slice of Transaction entities or an error if the file cannot be read,
+// the format is invalid, or any row contains invalid data.
+//
+// The method provides detailed error messages including line numbers for parsing failures.
 func (r *CSVReader) ReadFile(filePath string) ([]*domain.Transaction, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -42,7 +59,9 @@ func (r *CSVReader) ReadFile(filePath string) ([]*domain.Transaction, error) {
 	return r.Read(file)
 }
 
-// Read reads transactions from an io.Reader
+// Read reads and parses transactions from an io.Reader.
+// This method is useful for testing or reading from non-file sources.
+// Returns a slice of Transaction entities or an error if the format is invalid.
 func (r *CSVReader) Read(reader io.Reader) ([]*domain.Transaction, error) {
 	csvReader := csv.NewReader(reader)
 	csvReader.TrimLeadingSpace = true
