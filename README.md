@@ -26,6 +26,9 @@ The FX-Aware Settlement Engine is a Golang-based system that automates the entir
 
 - **Multi-Currency Support**: Handles ARS, BRL, COP, and MXN with conversion to USD
 - **Historical FX Rate Application**: Each transaction uses the FX rate from its transaction date
+- **Date Range Filtering**: Filter settlements by date range with `--start-date` and `--end-date` flags
+- **Anomaly Detection**: Automatically flags high refund rates (>20%), orphaned refunds, and duplicate IDs
+- **FX Volatility Detection**: Identifies >5% currency fluctuations between authorization and capture
 - **CSV Input/Output**: Easy integration with existing financial systems
 - **Financial Precision**: Uses `decimal.Decimal` library to avoid floating-point errors
 - **Transaction Type Support**: Processes authorizations, captures, and refunds
@@ -118,6 +121,48 @@ go run cmd/settlement/main.go \
 The output file (`settlements.csv`) contains:
 - Detail rows for each processed transaction with FX conversion
 - Summary rows showing total settlement amounts per supplier
+- Anomaly warnings in the `warnings` column (SUMMARY rows only)
+
+### 4. Advanced Features
+
+#### Date Range Filtering
+
+Filter transactions by date range to process specific time periods:
+
+```bash
+go run cmd/settlement/main.go \
+  --input testdata/transactions.csv \
+  --output settlements_jan.csv \
+  --start-date=2024-01-01 \
+  --end-date=2024-01-15
+```
+
+Date format: `YYYY-MM-DD` (both dates are inclusive)
+
+#### Anomaly Detection
+
+The settlement engine automatically detects and flags:
+
+- **High Refund Rate**: Suppliers with refund rate >20% of captured volume
+- **FX Volatility**: >5% currency variance between authorization and capture
+- **Orphaned Refunds**: Refunds without matching captures for the supplier
+- **Duplicate IDs**: Duplicate transaction IDs in the dataset
+- **Negative Net**: Suppliers with negative settlement amounts (informational)
+
+Warnings appear in:
+1. **Console output** (logged during processing with ⚠️ symbol)
+2. **CSV report** (`warnings` column in SUMMARY rows, comma-separated)
+3. **CSV columns**: `refund_rate_pct`, `volatility_flag`, `warnings`
+
+Example console output:
+```
+⚠️  Warnings Detected:
+  SUP004 (Supplier SUP004): HIGH_REFUND_RATE
+  SUP005 (Supplier SUP005): HIGH_REFUND_RATE
+  SUP007 (Supplier SUP007): HIGH_REFUND_RATE
+
+⚠️  Review the settlement report for detailed warning information.
+```
 
 ## Input CSV Format
 
@@ -171,25 +216,33 @@ One row per processed transaction showing the FX conversion:
 
 ### Summary Rows
 
-One row per supplier showing total settlement:
+One row per supplier showing total settlement and anomaly flags:
 
 | Column | Description | Example |
 |--------|-------------|---------|
 | `supplier_id` | Supplier identifier | `SUP-123` |
 | `type` | Always `SUMMARY` | `SUMMARY` |
-| `total_usd` | Net settlement in USD | `1234.56` |
+| `total_captures_usd` | Total captured amount in USD | `1500.00` |
+| `total_refunds_usd` | Total refunded amount in USD | `265.44` |
+| `net_amount_usd` | Net settlement in USD | `1234.56` |
 | `transaction_count` | Number of transactions | `15` |
+| `refund_rate_pct` | Refund rate as percentage | `17.70` |
+| `volatility_flag` | True if >5% FX variance detected | `false` |
+| `warnings` | Comma-separated warning codes | `HIGH_REFUND_RATE` |
 
 ### Example Output
 
 ```csv
-supplier_id,type,transaction_id,transaction_type,original_amount,currency,fx_rate,usd_amount,timestamp,total_usd,transaction_count
-SUP-123,DETAIL,TXN-001,capture,1250.50,BRL,0.2045,255.78,2024-01-15T10:30:00Z,,
-SUP-123,DETAIL,TXN-002,refund,-100.00,BRL,0.2045,-20.45,2024-01-16T14:20:00Z,,
-SUP-123,SUMMARY,,,,,,,,235.33,2
-SUP-456,DETAIL,TXN-003,capture,50000.00,ARS,0.0012,60.00,2024-01-15T11:45:00Z,,
-SUP-456,SUMMARY,,,,,,,,60.00,1
+supplier_id,supplier_name,transaction_id,type,timestamp,original_amount,original_currency,fx_rate,usd_amount,total_captures_usd,total_refunds_usd,net_amount_usd,transaction_count,refund_rate_pct,volatility_flag,warnings
+SUP001,Supplier SUP001,TXN067,capture,2024-01-01T03:16:00Z,7658.56,BRL,0.200325,1534.20,,,,,,,
+SUP001,Supplier SUP001,TXN030,refund,2024-01-03T17:55:00Z,500.00,BRL,0.203490,101.75,,,,,,,
+SUP001,Supplier SUP001,,SUMMARY,,,,,,54842.77,6314.38,48528.39,55,11.51,false,
+SUP004,Supplier SUP004,TXN120,capture,2024-01-05T10:30:00Z,15000.00,ARS,0.001200,18.00,,,,,,,
+SUP004,Supplier SUP004,TXN121,refund,2024-01-06T14:20:00Z,5000.00,ARS,0.001195,5.98,,,,,,,
+SUP004,Supplier SUP004,,SUMMARY,,,,,,48980.53,9978.48,39002.05,31,20.37,false,HIGH_REFUND_RATE
 ```
+
+Note: Detail rows have empty values for aggregated columns. Summary rows have empty values for transaction-specific columns.
 
 ## Design Decisions
 
@@ -276,14 +329,23 @@ The `scripts/generate_testdata.go` script creates comprehensive test data includ
 
 This implementation addresses all requirements of the Solara Travel technical challenge:
 
+### Core Requirements (100% Complete)
+
 - ✅ **Transaction Ingestion**: CSV parser with validation and error handling
 - ✅ **Historical FX Rates**: Date-specific rate application per transaction
 - ✅ **Settlement Calculation**: Accurate aggregation per supplier using decimal precision
 - ✅ **CSV Report Generation**: Detailed and summary rows in standardized format
-- ✅ **Test Data**: 250+ realistic transactions with edge cases
+- ✅ **Test Data**: 478 realistic transactions with edge cases
 - ✅ **Code Quality**: Clean Go code following best practices
 - ✅ **Testing**: Comprehensive unit tests for all business logic
 - ✅ **Documentation**: Clear README, godoc comments, and examples
+
+### Stretch Goals (100% Complete)
+
+- ✅ **Multi-Period Analysis**: Date range filtering with `--start-date` and `--end-date` flags
+- ✅ **FX Volatility Detection**: Identifies >5% currency variance between authorization and capture
+- ✅ **Anomaly Detection**: Flags high refund rates (>20%), orphaned refunds, and duplicate IDs
+- ✅ **Comprehensive Warnings**: Console alerts and CSV columns for all detected anomalies
 
 ## Development
 
