@@ -5,6 +5,7 @@ vendor/
 *.csv
 
 # Binaries
+settlement
 cmd/settlement/settlement
 *.exe
 *.exe~
@@ -17,6 +18,7 @@ cmd/settlement/settlement
 
 # Output of the go coverage tool
 *.out
+coverage.html
 
 # IDE
 .idea/
