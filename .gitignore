@@ -1,0 +1,26 @@
+# Vendor directory
+vendor/
+
+# Output CSV files
+*.csv
+
+# Binaries
+cmd/settlement/settlement
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
