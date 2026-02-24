@@ -1,0 +1,6 @@
+transaction_id,supplier_id,type,original_amount,currency,timestamp,status
+TXN-001,SUP-123,capture,1250.50,BRL,2024-01-15T10:30:00Z,completed
+TXN-002,SUP-123,refund,100.00,BRL,2024-01-16T14:20:00Z,completed
+TXN-003,SUP-456,capture,50000.00,ARS,2024-01-15T11:45:00Z,completed
+TXN-004,SUP-456,capture,200.00,MXN,2024-01-17T09:15:00Z,completed
+TXN-005,SUP-789,capture,100000.00,COP,2024-01-18T16:30:00Z,completed
