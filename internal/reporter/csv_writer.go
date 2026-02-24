@@ -9,15 +9,23 @@ import (
 	"github.com/ignacio/solara-settlement/internal/domain"
 )
 
-// CSVWriter writes settlement reports to CSV format
+// CSVWriter formats and writes settlement reports to CSV files.
+// It generates two types of rows for each supplier:
+//   - Detail rows: One per transaction, showing the FX conversion details
+//   - Summary rows: One per supplier, showing aggregated totals
+//
+// The CSV output includes columns for transaction details, FX rates, converted amounts,
+// and settlement totals, making it easy to import into spreadsheets or financial systems.
 type CSVWriter struct{}
 
-// NewCSVWriter creates a new CSV writer
+// NewCSVWriter creates a new CSV writer for settlement reports.
 func NewCSVWriter() *CSVWriter {
 	return &CSVWriter{}
 }
 
-// WriteFile writes settlements to a CSV file
+// WriteFile writes settlement reports to a CSV file at the specified path.
+// The file will be created or overwritten if it already exists.
+// Returns an error if the file cannot be created or if writing fails.
 func (w *CSVWriter) WriteFile(filePath string, settlements []*domain.SupplierSettlement) error {
 	file, err := os.Create(filePath)
 	if err != nil {
@@ -28,7 +36,9 @@ func (w *CSVWriter) WriteFile(filePath string, settlements []*domain.SupplierSet
 	return w.Write(file, settlements)
 }
 
-// Write writes settlements to an io.Writer
+// Write writes settlement reports to an io.Writer in CSV format.
+// This method is useful for testing or writing to non-file destinations.
+// Returns an error if writing fails.
 func (w *CSVWriter) Write(writer io.Writer, settlements []*domain.SupplierSettlement) error {
 	csvWriter := csv.NewWriter(writer)
 	defer csvWriter.Flush()

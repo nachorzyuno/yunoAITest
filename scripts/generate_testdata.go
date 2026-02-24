@@ -329,7 +329,7 @@ func printStatistics(transactions []Transaction) {
 		}
 	}
 
-	fmt.Println("\n=== TRANSACTION STATISTICS ===\n")
+	fmt.Println("\n=== TRANSACTION STATISTICS ===")
 
 	fmt.Println("Transactions per Supplier:")
 	for _, supplier := range suppliers {

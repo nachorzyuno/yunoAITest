@@ -55,7 +55,8 @@ func (v *Validator) Validate(tx *domain.Transaction) error {
 	return nil
 }
 
-// ValidateBatch validates a batch of transactions
+// ValidateBatch validates multiple transactions, returning an error on the first invalid transaction.
+// The error message includes the transaction index and ID for easy identification.
 func (v *Validator) ValidateBatch(transactions []*domain.Transaction) error {
 	for i, tx := range transactions {
 		if err := v.Validate(tx); err != nil {
