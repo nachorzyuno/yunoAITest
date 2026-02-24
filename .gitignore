@@ -5,7 +5,7 @@ vendor/
 *.csv
 
 # Binaries
-settlement
+/settlement
 cmd/settlement/settlement
 *.exe
 *.exe~

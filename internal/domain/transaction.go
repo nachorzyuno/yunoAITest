@@ -11,8 +11,9 @@ import (
 type TransactionType string
 
 const (
-	Capture TransactionType = "capture"
-	Refund  TransactionType = "refund"
+	Authorization TransactionType = "authorization"
+	Capture       TransactionType = "capture"
+	Refund        TransactionType = "refund"
 )
 
 // TransactionStatus represents the status of a transaction
@@ -67,7 +68,7 @@ func (t *Transaction) Validate() error {
 // ValidateType checks if the transaction type is valid
 func (t *Transaction) ValidateType() error {
 	switch t.Type {
-	case Capture, Refund:
+	case Authorization, Capture, Refund:
 		return nil
 	default:
 		return fmt.Errorf("invalid transaction type: %s", t.Type)

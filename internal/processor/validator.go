@@ -82,7 +82,7 @@ func (v *Validator) validateAmount(amount decimal.Decimal) error {
 
 func (v *Validator) validateType(txType domain.TransactionType) error {
 	switch txType {
-	case domain.Capture, domain.Refund:
+	case domain.Authorization, domain.Capture, domain.Refund:
 		return nil
 	default:
 		return fmt.Errorf("invalid transaction type: %s", txType)

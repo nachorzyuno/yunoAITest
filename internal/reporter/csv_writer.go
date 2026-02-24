@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/ignacio/solara-settlement/internal/domain"
 )
@@ -58,6 +60,9 @@ func (w *CSVWriter) Write(writer io.Writer, settlements []*domain.SupplierSettle
 		"total_refunds_usd",
 		"net_amount_usd",
 		"transaction_count",
+		"refund_rate_pct",  // NEW: Refund rate as percentage
+		"volatility_flag",   // NEW: True if >5% FX variance detected
+		"warnings",          // NEW: Comma-separated warning codes
 	}
 
 	if err := csvWriter.Write(header); err != nil {
@@ -92,6 +97,9 @@ func (w *CSVWriter) writeSettlement(csvWriter *csv.Writer, settlement *domain.Su
 			"", // Empty for detail rows
 			"", // Empty for detail rows
 			"", // Empty for detail rows
+			"", // Empty for detail rows (refund_rate_pct)
+			"", // Empty for detail rows (volatility_flag)
+			"", // Empty for detail rows (warnings)
 		}
 
 		if err := csvWriter.Write(record); err != nil {
@@ -103,17 +111,20 @@ func (w *CSVWriter) writeSettlement(csvWriter *csv.Writer, settlement *domain.Su
 	summaryRecord := []string{
 		settlement.SupplierID,
 		settlement.SupplierName,
-		"",      // No transaction ID for summary
+		"",        // No transaction ID for summary
 		"SUMMARY", // Type indicates summary row
-		"",      // No timestamp for summary
-		"",      // No original amount for summary
-		"",      // No currency for summary
-		"",      // No FX rate for summary
-		"",      // No individual USD amount for summary
+		"",        // No timestamp for summary
+		"",        // No original amount for summary
+		"",        // No currency for summary
+		"",        // No FX rate for summary
+		"",        // No individual USD amount for summary
 		settlement.TotalCapturesUSD.StringFixed(2),
 		settlement.TotalRefundsUSD.StringFixed(2),
 		settlement.NetAmountUSD.StringFixed(2),
 		fmt.Sprintf("%d", settlement.TransactionCount),
+		settlement.RefundRatePct.StringFixed(2),           // NEW: Refund rate percentage
+		strconv.FormatBool(settlement.VolatilityFlag),     // NEW: Volatility flag
+		strings.Join(settlement.Warnings, ", "),           // NEW: Comma-separated warnings
 	}
 
 	if err := csvWriter.Write(summaryRecord); err != nil {

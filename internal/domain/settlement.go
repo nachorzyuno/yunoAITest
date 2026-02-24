@@ -20,6 +20,12 @@ type SupplierSettlement struct {
 	TotalRefundsUSD   decimal.Decimal
 	NetAmountUSD      decimal.Decimal
 	TransactionCount  int
+
+	// Stretch goal fields for anomaly detection and multi-period analysis
+	RefundRatePct    decimal.Decimal  // Refund rate as percentage of captures
+	VolatilityFlag   bool              // True if >5% FX variance detected between auth and capture
+	Warnings         []string          // List of warning codes (HIGH_REFUND_RATE, VOLATILITY_WARNING, etc.)
+	AuthTransactions []*Transaction    // Authorization transactions for volatility comparison
 }
 
 // NewSupplierSettlement creates a new supplier settlement
@@ -32,6 +38,10 @@ func NewSupplierSettlement(supplierID, supplierName string) *SupplierSettlement 
 		TotalRefundsUSD:  decimal.Zero,
 		NetAmountUSD:     decimal.Zero,
 		TransactionCount: 0,
+		RefundRatePct:    decimal.Zero,
+		VolatilityFlag:   false,
+		Warnings:         make([]string, 0),
+		AuthTransactions: make([]*Transaction, 0),
 	}
 }
 

@@ -2,6 +2,7 @@ package fxrate
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/ignacio/solara-settlement/internal/domain"
 	"github.com/shopspring/decimal"
@@ -37,4 +38,10 @@ func (s *Service) ConvertToUSD(tx *domain.Transaction) (decimal.Decimal, decimal
 	usdAmount := tx.OriginalAmount.Mul(rate)
 
 	return usdAmount, rate, nil
+}
+
+// GetRate retrieves the FX rate for a given currency and date
+// This method is used for volatility detection and other rate comparisons
+func (s *Service) GetRate(currency domain.Currency, date time.Time) (decimal.Decimal, error) {
+	return s.provider.GetRate(currency, date)
 }
